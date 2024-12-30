@@ -1,45 +1,43 @@
 #include <vector>
+#include <algorithm>
 #include <iostream>
 using namespace std;
 
 class Solution {
 public:
     double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
+        if (nums1.size() > nums2.size()) {
+            nums1.swap(nums2); // Ensure nums1 is the smaller array
+        }
+
         int n = nums1.size();
         int m = nums2.size();
-        int i = 0, j = 0, k = 0;
-        vector<int> sorted_array(n + m, 0);
+        int halfLen = (n + m + 1) / 2;
+        int low = 0, high = n;
 
-        for (k = 0; k < n + m; ++k) {
-            int n1 = (i < n) ? nums1[i] : INT_MAX; // Handle out-of-bounds
-            int n2 = (j < m) ? nums2[j] : INT_MAX; // Handle out-of-bounds
+        while (low <= high) {
+            int i = (low + high) / 2;
+            int j = halfLen - i;
 
-            if (n1 < n2) {
-                sorted_array[k] = n1;
-                i++;
+            int nums1LeftMax = (i > 0) ? nums1[i - 1] : INT_MIN;
+            int nums1RightMin = (i < n) ? nums1[i] : INT_MAX;
+
+            int nums2LeftMax = (j > 0) ? nums2[j - 1] : INT_MIN;
+            int nums2RightMin = (j < m) ? nums2[j] : INT_MAX;
+
+            if (nums1LeftMax <= nums2RightMin && nums2LeftMax <= nums1RightMin) {
+                return (n + m) % 2 == 0 
+                    ? (max(nums1LeftMax, nums2LeftMax) + min(nums1RightMin, nums2RightMin)) / 2.0
+                    : max(nums1LeftMax, nums2LeftMax);
+            } 
+
+            if (nums1LeftMax > nums2RightMin) {
+                high = i - 1;
             } else {
-                sorted_array[k] = n2;
-                j++;
-            }
-
-            if (i == n) {
-                for (int l = j; l < m; ++l, ++k) {
-                    sorted_array[k + 1] = nums2[l];
-                }
-                break;
-            } else if (j == m) {
-                for (int l = i; l < n; ++l, ++k) {
-                    sorted_array[k + 1] = nums1[l];
-                }
-                break;
+                low = i + 1;
             }
         }
 
-        if ((n + m) % 2 == 0) {
-            int a = sorted_array[(n + m - 1) / 2] + sorted_array[((n + m - 1) / 2) + 1];
-            return static_cast<double>(a) / 2;
-        } else {
-            return sorted_array[(n + m) / 2];
-        }
+        throw invalid_argument("Input arrays are not sorted.");
     }
 };
